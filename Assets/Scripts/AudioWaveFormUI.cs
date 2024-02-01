@@ -3,10 +3,9 @@ using UnityEngine.UI;
 
 public class AudioWaveformUI : Graphic
 {
-    public AudioAnalysis audioAnalysis;
     public AudioCapture audioCapture;
+    public AudioAnalysis audioAnalysis;
     public Gradient loudnessGradient;
-    private float[] audioData = new float[1024];
 
     [SerializeField] private float heightScale = 1.0f; // Height scaling factor
     [SerializeField] private float lineThickness = 2.0f; // Thickness of the waveform line
@@ -14,19 +13,21 @@ public class AudioWaveformUI : Graphic
 
     protected override void OnPopulateMesh(VertexHelper vh)
     {
-        if (Application.isPlaying == false)
+        vh.Clear();
+
+        if (Application.isPlaying == false || audioCapture == null)
         {
             return;
         }
-        vh.Clear();
-        UpdateAudioData(); // Ensure audio data is updated
-
+        
+        float[] audioData = audioCapture.GetAudioData(); // Get audio data from AudioAnalysis
         float loudness = audioAnalysis.NormalizedVolume;
         
         int samplesCount = audioData.Length;
         float width = rectTransform.rect.width;
         float halfWidth = width / 2;
         float height = rectTransform.rect.height * heightScale;
+
 
         for (int i = 0; i < samplesCount - 1; i++)
         {
@@ -56,10 +57,5 @@ public class AudioWaveformUI : Graphic
     void Update()
     {
         SetVerticesDirty(); // Cause OnPopulateMesh to be called again
-    }
-    
-    private void UpdateAudioData()
-    {
-        audioCapture.GetOutputData(audioData);
     }
 }

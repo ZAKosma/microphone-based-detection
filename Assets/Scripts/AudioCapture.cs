@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 [RequireComponent(typeof(AudioSource))]
@@ -7,24 +8,28 @@ public class AudioCapture : MonoBehaviour
     private const int SAMPLE_COUNT = 1024;
     private float[] audioData;
 
-    void Start()
+    void Awake()
     {
         audioSource = GetComponent<AudioSource>();
         audioData = new float[SAMPLE_COUNT];
-        StartMicrophone();
     }
 
-    void StartMicrophone()
+    private void Start()
+    {
+        InitializeMicrophone();
+    }
+
+    public void InitializeMicrophone()
     {
         audioSource.clip = Microphone.Start(null, true, 10, 44100);
         audioSource.loop = true;
-        // Wait until the microphone is ready
         while (!(Microphone.GetPosition(null) > 0)) {}
         audioSource.Play();
     }
 
-    public void GetOutputData(float[] data)
+    public float[] GetAudioData()
     {
-        audioSource.GetOutputData(data, 0);
+        audioSource.GetOutputData(audioData, 0);
+        return audioData;
     }
 }
