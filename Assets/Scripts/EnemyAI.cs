@@ -184,12 +184,20 @@ public class EnemyAI : MonoBehaviour
         PlaySound(patrolSound, patrolVolume);
     }
     
-    private void PlaySound(AudioClip clip, float volume, bool loop = true)
+    private void PlaySound(AudioClip clip, float volume, bool loop = true, float delayMin = .05f, float delayMax = .2f)
     {
+        
         audioSource.Stop();
         audioSource.volume = volume;
         audioSource.clip = clip;
         audioSource.loop = loop;
+
+        StartCoroutine(ActivateClip(Random.Range(delayMin, delayMax)));
+    }
+
+    private IEnumerator ActivateClip(float delay)
+    {
+        yield return new WaitForSeconds(delay);
         audioSource.Play();
     }
 
