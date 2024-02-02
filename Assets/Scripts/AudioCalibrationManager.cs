@@ -1,5 +1,6 @@
 ﻿
 using System.Collections;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -30,7 +31,7 @@ public class AudioCalibrationManager : MonoBehaviour
     {
         startCalibrationButton.onClick.AddListener(() => StartCoroutine(CalibrateBackgroundNoiseLevel(backgroundCalibrationTime)));
         testMicrophoneButton.onClick.AddListener(() => StartCoroutine(CalibrateMaxLoudnessLevel(loudnessCalibrationTime)));
-        applyButton.onClick.AddListener(ApplyCalibrationAndProceed);
+        applyButton.onClick.AddListener(ApplyAndProceed);
         
         startCalibrationButton.gameObject.SetActive(true);
         testMicrophoneButton.gameObject.SetActive(false);
@@ -66,36 +67,48 @@ public class AudioCalibrationManager : MonoBehaviour
 
     private IEnumerator MeasureAudioLevel(int duration, bool isBackgroundNoise)
     {
-        float sum = 0f;
-        int sampleCount = 0;
+        List<float> allAudioData = new List<float>();
         for (int i = duration; i > 0; i--)
         {
-            timerText.text = $"Remaining: {i}s";
+            timerText.text = i + "s";
             float[] audioData = audioCapture.GetAudioData();
-            foreach (var sample in audioData)
-            {
-                sum += sample * sample;
-            }
-            sampleCount += audioData.Length;
+            allAudioData.AddRange(audioData);
             yield return new WaitForSeconds(1);
         }
 
-        float rms = Mathf.Sqrt(sum / sampleCount);
+
         if (isBackgroundNoise)
         {
+            float rms = AudioUtility.CalculateRMS(allAudioData.ToArray());
+
             backgroundNoiseLevel = rms;
-            AudioSettingsManager.BackgroundNoiseLevel = rms;
         }
         else
+            maxLoudnessLevel = FindMaxSample(allAudioData);
+    }
+    
+    
+    private float FindMaxSample(List<float> samples)
+    {
+        float maxSample = 0f;
+        foreach (float sample in samples)
         {
-            maxLoudnessLevel = rms;
-            AudioSettingsManager.MaxLoudnessLevel = rms;
+            float absSample = Mathf.Abs(sample); // Consider the absolute value of each sample
+            if (absSample > maxSample)
+            {
+                maxSample = absSample;
+            }
         }
+        return maxSample;
     }
 
-    private void ApplyCalibrationAndProceed()
+    private void ApplyAndProceed()
     {
         Debug.Log($"Applying Calibration: BackgroundNoiseLevel = {backgroundNoiseLevel}, MaxLoudnessLevel = {maxLoudnessLevel}");
+        
+        AudioSettingsManager.BackgroundNoiseLevel = backgroundNoiseLevel;
+        AudioSettingsManager.MaxLoudnessLevel = maxLoudnessLevel;
+
         SceneManager.LoadScene("Game");
     }
 }
