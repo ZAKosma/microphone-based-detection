@@ -12,6 +12,7 @@ public class EnemyAI : MonoBehaviour
     public Vector2 preshoutDelay = new Vector2(0.1f, 0.5f);
     private int currentPatrolIndex;
     private NavMeshAgent agent;
+    [SerializeField]
     private Transform playerTransform;
     private Animator animator;
     private EnemyState _currentEnemyState;
@@ -52,8 +53,6 @@ public class EnemyAI : MonoBehaviour
         audioSource = GetComponent<AudioSource>();
         
         audioSource.pitch = Random.Range(pitchRange.x, pitchRange.y);
-        
-        playerTransform = GameObject.FindGameObjectWithTag("Player").transform;
 
         switch (startingState)
         {
