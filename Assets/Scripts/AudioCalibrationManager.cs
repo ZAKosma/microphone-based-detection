@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿
+using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -13,9 +14,11 @@ public class AudioCalibrationManager : MonoBehaviour
     [SerializeField] private Button testMicrophoneButton;
     [SerializeField] private Button applyButton;
     
-    //Time stored in seconds
     [SerializeField] private int backgroundCalibrationTime = 5;
     [SerializeField] private int loudnessCalibrationTime = 3;
+    
+    private float backgroundNoiseLevel;
+    private float maxLoudnessLevel;
 
     private void Start()
     {
@@ -25,8 +28,8 @@ public class AudioCalibrationManager : MonoBehaviour
 
     private void SetupUIEvents()
     {
-        startCalibrationButton.onClick.AddListener(() => StartCoroutine(CalibrateBackgroundNoiseLevel()));
-        testMicrophoneButton.onClick.AddListener(() => StartCoroutine(CalibrateMaxLoudnessLevel()));
+        startCalibrationButton.onClick.AddListener(() => StartCoroutine(CalibrateBackgroundNoiseLevel(backgroundCalibrationTime)));
+        testMicrophoneButton.onClick.AddListener(() => StartCoroutine(CalibrateMaxLoudnessLevel(loudnessCalibrationTime)));
         applyButton.onClick.AddListener(ApplyCalibrationAndProceed);
         
         startCalibrationButton.gameObject.SetActive(true);
@@ -35,68 +38,64 @@ public class AudioCalibrationManager : MonoBehaviour
         timerText.gameObject.SetActive(false);
     }
 
-    private IEnumerator CalibrateBackgroundNoiseLevel()
+    private IEnumerator CalibrateBackgroundNoiseLevel(int duration)
     {
         statusText.text = "Calibrating background noise. Please remain silent...";
         startCalibrationButton.gameObject.SetActive(false);
         timerText.gameObject.SetActive(true);
 
-        yield return MeasureAudioLevel(backgroundCalibrationTime, true);
+        yield return StartCoroutine(MeasureAudioLevel(duration, true));
 
-        AudioSettingsManager.BackgroundNoiseLevel = AudioUtility.CalculateRMS(audioCapture.GetAudioData());
-        statusText.text = "Background noise level calibrated. Please make a loud sound for max volume calibration.";
+        statusText.text = $"Background noise level calibrated: {backgroundNoiseLevel:F2}";
         testMicrophoneButton.gameObject.SetActive(true);
         timerText.gameObject.SetActive(false);
     }
 
-    private IEnumerator CalibrateMaxLoudnessLevel()
+    private IEnumerator CalibrateMaxLoudnessLevel(int duration)
     {
         statusText.text = "Calibrating max volume. Please make a loud sound (applaud)...";
         testMicrophoneButton.gameObject.SetActive(false);
         timerText.gameObject.SetActive(true);
 
-        yield return MeasureAudioLevel(loudnessCalibrationTime, false);
+        yield return StartCoroutine(MeasureAudioLevel(duration, false));
 
-        AudioSettingsManager.MaxLoudnessLevel = AudioUtility.CalculateRMS(audioCapture.GetAudioData());
-        statusText.text = "Max volume calibrated. Testing microphone...";
+        statusText.text = $"Max volume calibrated: {maxLoudnessLevel:F2}. Testing microphone...";
+        applyButton.gameObject.SetActive(true);
         timerText.gameObject.SetActive(false);
-        StartCoroutine(TestMicrophone());
     }
 
     private IEnumerator MeasureAudioLevel(int duration, bool isBackgroundNoise)
     {
         float sum = 0f;
-        int measureTime = isBackgroundNoise ? 5 : 3; // Adjust time based on calibration type
-        var audioData = audioCapture.GetAudioData();
-
-
+        int sampleCount = 0;
         for (int i = duration; i > 0; i--)
         {
-            timerText.text = i.ToString(); // Update the countdown timer text
-            audioData = audioCapture.GetAudioData();
+            timerText.text = $"Remaining: {i}s";
+            float[] audioData = audioCapture.GetAudioData();
             foreach (var sample in audioData)
             {
                 sum += sample * sample;
             }
+            sampleCount += audioData.Length;
             yield return new WaitForSeconds(1);
         }
 
-        for (int i = 0; i < audioData.Length; i++)
+        float rms = Mathf.Sqrt(sum / sampleCount);
+        if (isBackgroundNoise)
         {
-            audioData[i] = Mathf.Sqrt(sum / (audioData.Length * measureTime));
+            backgroundNoiseLevel = rms;
+            AudioSettingsManager.BackgroundNoiseLevel = rms;
         }
-    }
-
-    private IEnumerator TestMicrophone()
-    {
-        yield return new WaitForSeconds(5); // Example delay for testing
-        statusText.text = "Microphone test complete. Press Apply to proceed.";
-        applyButton.gameObject.SetActive(true);
+        else
+        {
+            maxLoudnessLevel = rms;
+            AudioSettingsManager.MaxLoudnessLevel = rms;
+        }
     }
 
     private void ApplyCalibrationAndProceed()
     {
-        //Settings are set in the previous methods so we can just load the scene.
+        Debug.Log($"Applying Calibration: BackgroundNoiseLevel = {backgroundNoiseLevel}, MaxLoudnessLevel = {maxLoudnessLevel}");
         SceneManager.LoadScene("Game");
     }
 }
