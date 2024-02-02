@@ -6,6 +6,13 @@ Welcome to the tutorial on creating a microphone-based stealth mechanism in Unit
 
 This tutorial guides you through creating a stealth game mechanism where the player's noise, captured via a microphone, influences the behavior of AI enemies. The enemies can detect the player's sounds, enhancing the stealth experience and adding an innovative, interactive element to the gameplay.
 
+## Starter Point
+
+Download the starter point for the project from Google Drive:
+
+[Zip File](https://drive.google.com/file/d/1kO9MBrkK3hDWNVVNvSN7FDQBrPZOwz5D/view?usp=drive_link)
+[Unity Package](https://drive.google.com/file/d/1y5V5CkPmuDoHN4ycWpjqh8I6RQeYRrE2/view?usp=drive_link)
+
 ### Key Features:
 
 - **Real-Time Audio Capture**: Learn how to capture audio from the player's microphone in real-time.
