@@ -42,7 +42,7 @@ Download the starter point for the project from Google Drive:
 
 ## Tutorial Video
 
-For a step-by-step guide through this project, please refer to our tutorial video on YouTube. The video will provide detailed instructions and insights to help you understand and implement each part of this project effectively. [Watch the Tutorial](#)
+For a step-by-step guide through this project, please refer to our tutorial video on YouTube. The video will provide detailed instructions and insights to help you understand and implement each part of this project effectively. [Watch the Tutorial](https://www.youtube.com/watch?v=a2nMFyQCwX0)
 
 ## License for My Code
 The source code specific to this project is licensed under the MIT License. See the [LICENSE](LICENSE.md) file for the full license text.
